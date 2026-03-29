@@ -68,18 +68,34 @@
   .drive-row .label { color: #8095b0; }
   .drive-row .time { color: #d0dae8; font-weight: 600; }
 
-  /* Custom popup */
+  /* Custom popup styling */
   .leaflet-popup-content-wrapper {
-    background: #0f1a2e; color: #d0dae8;
-    border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    background: #0f1a2e !important; color: #d0dae8;
+    border-radius: 12px !important; border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.6) !important;
+    max-width: 320px !important;
+    padding: 0 !important;
+    overflow: hidden;
   }
-  .leaflet-popup-tip { background: #0f1a2e; }
-  .leaflet-popup-content { margin: 12px 16px; font-family: 'DM Sans', sans-serif; }
-  .popup-title { font-family: 'DM Serif Display', serif; font-size: 15px; color: #f0f4fa; margin-bottom: 4px; }
-  .popup-day { font-size: 11px; color: #f0a050; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-  .popup-desc { font-size: 12px; color: #8899bb; margin-top: 6px; line-height: 1.5; }
-  .popup-type { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-top: 6px; font-weight: 600; }
+  .leaflet-popup-tip { background: #0f1a2e !important; }
+  .leaflet-popup-content { margin: 0 !important; width: 280px !important; font-family: 'DM Sans', sans-serif; }
+  .leaflet-popup-close-button { display: none !important; }
+
+  .popup-photos {
+    display: flex; width: 280px; height: 140px; overflow: hidden;
+  }
+  .popup-photos img {
+    width: 50%; height: 140px; object-fit: cover;
+    border-right: 1px solid rgba(255,255,255,0.05);
+  }
+  .popup-photos img:last-child { border-right: none; }
+  .popup-photos.single img { width: 100%; }
+
+  .popup-body { padding: 12px 16px 14px; }
+  .popup-day { font-size: 10px; color: #f0a050; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 3px; }
+  .popup-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: #f0f4fa; margin-bottom: 5px; line-height: 1.2; }
+  .popup-desc { font-size: 12px; color: #8899bb; line-height: 1.5; }
+  .popup-type { display: inline-block; font-size: 9px; padding: 2px 8px; border-radius: 4px; margin-top: 8px; font-weight: 700; letter-spacing: 0.8px; }
   .popup-type.base { background: rgba(80,180,120,0.2); color: #60d090; }
   .popup-type.attraction { background: rgba(240,160,80,0.2); color: #f0a050; }
   .popup-type.transit { background: rgba(100,160,240,0.2); color: #70b0f0; }
@@ -87,6 +103,7 @@
   @media (max-width: 768px) {
     .legend, .drive-info { display: none; }
     .title-bar h1 { font-size: 16px; }
+    .title-bar .dates { display: none; }
   }
 </style>
 </head>
@@ -125,8 +142,7 @@
 const map = L.map('map', {
   center: [65.0, -18.5],
   zoom: 6,
-  zoomControl: true,
-  attributionControl: true
+  zoomControl: true
 });
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -134,139 +150,223 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   maxZoom: 18
 }).addTo(map);
 
-// Color scheme for each stay
 const colors = {
   base1: '#50b478', base2: '#4a90d9', base3: '#d97b4a',
   base4: '#c94a4a', base5: '#9b59b6', base6: '#e6c74a',
-  transit: '#5588aa', froad: '#e05555'
+  froad: '#e05555'
 };
 
-// Helper: create a circle marker
-function pin(lat, lng, color, label, popup, radius = 7) {
+function photoHtml(imgs) {
+  if (!imgs || imgs.length === 0) return '';
+  const cls = imgs.length === 1 ? 'popup-photos single' : 'popup-photos';
+  return `<div class="${cls}">${imgs.slice(0,2).map(u => `<img src="${u}" loading="lazy" alt="">`).join('')}</div>`;
+}
+
+function pp(title, day, desc, type, imgs) {
+  const cls = type === 'base' ? 'base' : type === 'transit' ? 'transit' : 'attraction';
+  const typeLabel = type === 'base' ? '🏠 HOME BASE' : type === 'transit' ? '🚗 TRANSIT' : '📍 ATTRACTION';
+  return `${photoHtml(imgs)}<div class="popup-body"><div class="popup-day">${day}</div><div class="popup-title">${title}</div><div class="popup-desc">${desc}</div><div class="popup-type ${cls}">${typeLabel}</div></div>`;
+}
+
+function pin(lat, lng, color, label, popup, radius, hasLabel) {
   const m = L.circleMarker([lat, lng], {
-    radius: radius, fillColor: color, color: '#fff',
+    radius: radius || 7, fillColor: color, color: '#fff',
     weight: 1.5, opacity: 0.9, fillOpacity: 0.85
   }).addTo(map);
-  if (popup) m.bindPopup(popup);
-  if (label) {
+  if (popup) {
+    m.bindPopup(popup, { maxWidth: 280, autoPan: true, autoPanPadding: [40, 40] });
+    m.on('mouseover', function(e) { this.openPopup(); });
+  }
+  if (hasLabel && label) {
     m.bindTooltip(label, {
-      permanent: true, direction: 'right', offset: [10, 0],
+      permanent: true, direction: 'right', offset: [12, 0],
       className: 'map-label'
     });
   }
   return m;
 }
 
-// Helper: popup HTML
-function pp(title, day, desc, type) {
-  const cls = type === 'base' ? 'base' : type === 'transit' ? 'transit' : 'attraction';
-  const typeLabel = type === 'base' ? 'HOME BASE' : type === 'transit' ? 'TRANSIT' : 'ATTRACTION';
-  return `<div class="popup-day">${day}</div><div class="popup-title">${title}</div><div class="popup-desc">${desc}</div><div class="popup-type ${cls}">${typeLabel}</div>`;
-}
+// Google Places photo proxy (resize for fast loading)
+function gp(url) { return url.replace('s4800-w800-h600', 's800-w400-h280'); }
 
-// ===== BASES (large pins with labels) =====
-pin(63.9948, -22.6239, '#fff', null, pp('Keflavík Airport', 'Day 1 & Day 16', 'Arrive Jun 28 6:20am. Depart Jul 12 8:00pm.', 'transit'), 6);
-pin(64.926, -23.255, colors.base1, 'Grundarfjörður', pp('Grundarfjörður', 'Days 1–3 · Jun 28–30', '3 nights. Fishing village on Snæfellsnes. Base for glacier national park, Kirkjufell, and waterfalls.', 'base'), 10);
-pin(66.075, -23.1248, colors.base2, 'Ísafjörður', pp('Ísafjörður', 'Days 4–6 · Jul 1–3', '3 nights. Capital of the Westfjords. Base for Dynjandi, Látrabjarg puffin cliffs, Rauðasandur, and mountain hikes.', 'base'), 10);
-pin(65.7424, -19.6403, colors.base3, 'Skagafjörður', pp('Skagafjörður', 'Days 7–8 · Jul 4–5', '2 nights. Iceland\'s horse country. Half-day horseback ride and Glaumbaer turf farm.', 'base'), 10);
-pin(64.6834, -19.2998, colors.base4, 'Kerlingarfjöll', pp('Kerlingarfjöll Highland Base', 'Day 9 · Jul 6', '1 night. Central Highlands via F35 Kjölur. Hveravellir hot spring. Hveradalir geothermal valley hike.', 'base'), 10);
-pin(65.2609, -14.3994, colors.base5, 'Egilsstaðir', pp('Egilsstaðir', 'Days 10–11 · Jul 7–8', '2 nights. East Iceland hub. Mývatn geothermal pass-through on arrival. Stuðlagil Canyon day trip.', 'base'), 10);
-pin(63.4177, -18.9974, colors.base6, 'Vík', pp('Vík', 'Days 12–14 · Jul 9–11', '3 nights. South coast base. Glacier walk, Jökulsárlón, Diamond Beach, Reynisfjara black sand beach, Fjaðrárgljúfur canyon.', 'base'), 10);
+// ===== BASES =====
+pin(63.9948, -22.6239, '#aabbcc', null, pp('Keflavík Airport', 'Day 1 & Day 16', 'Arrive Sun Jun 28 6:20am. Depart Sun Jul 12 8:00pm. Pick up / drop off 4WD rental.', 'transit', [
+  gp('https://lh3.googleusercontent.com/places/ANXAkqEcccwhFcHRUejayyCL-uuErWwLx9aon3wygLVun4N7R48U5frzr55aV-5GOFGo7ENTbHzynAiDxSbeF1YG3iZROUMY8p2Upcc=s4800-w800-h600')
+]), 6, false);
 
-// ===== ATTRACTIONS (smaller pins) =====
+pin(64.926, -23.255, colors.base1, 'Grundarfjörður', pp('Grundarfjörður — Base 1', 'Days 1–3 · Jun 28–30 · 3 nights', 'Charming fishing village on the Snæfellsnes Peninsula, nestled beneath the iconic Kirkjufell mountain. Your base for exploring glacier national park, waterfalls, and lava fields.', 'base', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGwLGbHhSHwnf7jxX8EFLU_17UzlYcejfsQV2sJizyxAKwCpR0Dx8guy-xULP-wiQHU1c1cMnXQtdydX_EGsbmNKejv2VsObH3lk9WK48F6u2rIeVqU7DrQyFL_HC5MYIoOD2c3Jy-pR1CLquxNlxa_9w=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGWdwa9VLHxOOoXETU2cRVDud1Dq1bn_Pb0BMuTEsSpitXxuRvlBEVKixPF6ws_5XP1qOu-U_iLkaOFEg0N0YP_GuW7rJs9Wvz1ZxekLmwt8_rscZUVYNkbJV8n0onV9Qqj_8CRq6gS-CB2-Q=s4800-w800-h600')
+]), 11, true);
+
+pin(66.075, -23.1248, colors.base2, 'Ísafjörður', pp('Ísafjörður — Base 2', 'Days 4–6 · Jul 1–3 · 3 nights', 'The "capital" of the Westfjords with ~2,600 people. Gateway to dramatic fjords, Europe\'s largest puffin cliffs, and a surreal golden beach.', 'base', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFayTUMknvsahOmpl6Gg696snkgathAYwse-71UZhcqK66TS40IEwd9LDipSiFDqJTLZ4XuVxzSEF9RI0rk7lJbw-FWPkgfNDbXSVRp_-qiTeAL9dQEf-Cn-oVSQeXsAwA4ISYacJWLUiYZUw=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGVknL_SFvH8z6fDP8iRdgPS7JdhKIOTRoCf9f73EjAm1YJm1i-g3TqW2voC9lqX_XTBfVcRTkrcrzg5XA3S8-wNymWACqt90yBbZVdtezXR4J6YXfKNHyGGaTlqGeHfu_DIu4AfCQKgt3Q=s4800-w800-h600')
+]), 11, true);
+
+pin(65.7424, -19.6403, colors.base3, 'Skagafjörður', pp('Skagafjörður — Base 3', 'Days 7–8 · Jul 4–5 · 2 nights', 'Iceland\'s horse capital. More Icelandic horses per capita than anywhere. Home to Viking-era turf farms and the gateway to the Highlands.', 'base', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFiAQLeOVM9oivi236AWD3F4NKxeEYXG6DgTQZcA91GnoQEE1Chu3FQ-Pzi7IGNzaijK76BOixNaEP58rv2SV_wEwKUGRz1Us1D2un8MYRMhNQEdPaTJw7axhwRdS3q3B1cllUgiag-wvjkKSM=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/places/ANXAkqFZxiMvSAht3L9EMZyVWZHCicv9z7giRdEsaacVXQoKV9N0l9o9k0MjIlQomWfTP8HMFIfGd6w7U21awny2k1zyl0cUY0GzJzk=s4800-w800-h600')
+]), 11, true);
+
+pin(64.6834, -19.2998, colors.base4, 'Kerlingarfjöll', pp('Kerlingarfjöll Highland Base — Base 4', 'Day 9 · Jul 6 · 1 night', 'Deep in the Central Highlands. Vivid orange rhyolite mountains, steaming geothermal valleys, and snow-capped peaks. Accessed via the F35 Kjölur road.', 'base', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGnJ1q2MdUXZSo8nBcZS_kZfE2aWaR0Q3kn-rMmlyyJ57BWJYzsGBk5prEKAe8cdcJ_TeVVEiEZ4wsebtNjLwDe67NGmlUATIx0Ela0EJdrn2Sjz5Hbr-M095cyY6U_CkO3URQAtYpj_8VL2xJ46-DffQ=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNEJWXdmkVldi5f8zpS3OmetPY1I5-fTPMw41oxayR65jVbkL7OfWk2_bSFLwh_EUCjxAhe-JMF0T4pWO9bqzyh-9j7u73lRWIjss4w048imGK2qNa_cufHa375jqy8r9R6qtkcQDhA7iil9RO8OCn_8Uw=s4800-w800-h600')
+]), 11, true);
+
+pin(65.2609, -14.3994, colors.base5, 'Egilsstaðir', pp('Egilsstaðir — Base 5', 'Days 10–11 · Jul 7–8 · 2 nights', 'East Iceland hub. Pass through Mývatn\'s alien geothermal landscape on arrival. Stuðlagil basalt canyon day trip.', 'base', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNErNYGGUxPmVYxv-P0JFb9a2W8goEZyLrzYRK10SLrwov_pJxmdpcSWSXinh2dkG0lGuv7phdtqmcU1oS8tlMmV4rL_-U7xmC2-Qb02tobZONf_SkKRmLfeKV8dpwF9m9V64FIEYWaLvsMhKw=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHDd-N-prh22r_ntvcXw2PkpL9KylP2yuYExGZ5FoETEXSFpbJPQyiT5qCHEn251Vu_fxfEZ3nmcwGGaJrgCsIt3dN0S2CHaE7OauAb719bI-2vePLEVaHZu7-45Zobk0zxhOEGdQEdcy6UWPk=s4800-w800-h600')
+]), 11, true);
+
+pin(63.4177, -18.9974, colors.base6, 'Vík', pp('Vík — Base 6', 'Days 12–14 · Jul 9–11 · 3 nights', 'South coast village. Base for glacier walks, Jökulsárlón ice lagoon, Diamond Beach, Reynisfjara basalt beach, and Fjaðrárgljúfur canyon.', 'base', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHfx0IIi-yVjuRXNHnCX7WP5pzPzwpzGM81fQmYmQqvFygJEIl_8mV8iG3W3JFX-9LKST-cuw-ORkmtVN_Jlq-vPLenxSOcf7xxqeWzQw8i57PC2HyrB8DuCGhUPt82GmJ-DF_SElGuO7ziYw=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF6krRd1PWqEWfmdeFBSGnYHujws27kYb4jZHSNTrDw6StiejZncUa-IT0S5T9eZrrnpIvfVIV96DziFTT3UsYFBe8JkA-w9T3PvlQARdiwZx5qeHpPPFeuRWkfgfxl3HwvSzaHPIzoSR5YMsC0LQht=s4800-w800-h600')
+]), 11, true);
+
+// ===== ATTRACTIONS =====
+
 // Snæfellsnes
-pin(64.8, -23.7833, colors.base1, null, pp('Snæfellsjökull National Park', 'Day 2', 'Lava fields, coastal cliffs, glacier-capped volcano. 10 km day hike.', 'attraction'), 5);
-pin(64.9104, -23.2207, colors.base1, null, pp('Grundarfoss', 'Day 3', 'Uncrowded waterfall. Flat 45-min walk through horse meadows.', 'attraction'), 5);
-pin(64.9417, -23.3069, colors.base1, null, pp('Kirkjufell', 'Day 3', 'Iceland\'s most photographed mountain. Waterfall viewpoint.', 'attraction'), 5);
-pin(65.0724, -22.7334, colors.base1, null, pp('Stykkishólmur', 'Day 3–4', 'Colorful harbor. Baldur ferry departs here to the Westfjords.', 'transit'), 5);
+pin(64.8, -23.7833, colors.base1, null, pp('Snæfellsjökull National Park', 'Day 2', 'Glacier-capped volcano that inspired Jules Verne. Lava fields, coastal cliffs, and lonely hiking trails.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNEu1tzaRUKqPtGZtW_bbAJ_fuZcc4aSL1TuKx2ThqQTIQV5pv97Mquv_xvSej-eCFqz4Y_MpCgYQDrHQ0RIHoPiCMuMbMh703Ln3s-Gx5xvqTBffX5EUvyS9wh4lisrnhe0THzPVX3QTfqyVg=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFPjqOycp1PsY2WTUQDVKPAyHnuZL6t2IODxmnapRMZ3YvCfeI8OxnDw-_QU6WYawCX6IK8QkmTs0U4ojpBmajzn7lHiPF9mKrMtdBU6IxzxdL0gDK1nqIC7znDYgnN98ZJdfYw2LxiKc8jmWg=s4800-w800-h600')
+]), 5, false);
+
+pin(64.9104, -23.2207, colors.base1, null, pp('Grundarfoss', 'Day 3', 'A gorgeous waterfall few tourists visit. Flat 45-min walk through meadows with Icelandic horses grazing nearby.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGwLGbHhSHwnf7jxX8EFLU_17UzlYcejfsQV2sJizyxAKwCpR0Dx8guy-xULP-wiQHU1c1cMnXQtdydX_EGsbmNKejv2VsObH3lk9WK48F6u2rIeVqU7DrQyFL_HC5MYIoOD2c3Jy-pR1CLquxNlxa_9w=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNG-oydc0B_lL6EnWGGclm4TR5o3p4rh8HiCKNpzNX9bhX-QCNpVFdJmwNnCwHH2W3lQJ5E_9HbSWuNUPJqTBCPUe-f-TkS_xKGRUTwkNfl-fH8jeS231EpPJef3DFF_YSIJyCeRhdH6JAieuqE=s4800-w800-h600')
+]), 5, false);
+
+pin(64.9417, -23.3069, colors.base1, null, pp('Kirkjufell', 'Day 3', 'Iceland\'s most photographed mountain. Iconic arrowhead shape with a waterfall in the foreground.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF3Djrk4Mpk4I9wccCi8-vizR6CXuEok_lhpUnOqmTgoA_VVNcm0gTNiuOaoWR5aWtp2xbBHUC-l4v49UqXPe9RjQJqWXdUiQ8r0zRn-yIEwFhLIUZEEadDEzberuNhs6WHxuWlcsOYUaQJRw=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFkzEhNgd5FLyFM6iiS7KvBYjhalR9mRgpuqnaaxcfmY2Kvh_FcTMUvdtRKZsF7cKaOZXgp70my4LxGi0XAm3Hy0W4JJVrwfQ78-UC-2Uq9RvdtMkgHB_xf13hDSXpdzy9XaBH1LgQkty0v8I8=s4800-w800-h600')
+]), 5, false);
+
+pin(65.0724, -22.7334, colors.base1, null, pp('Stykkishólmur', 'Day 3–4', 'Colorful harbor town. Baldur ferry departs here for the Westfjords crossing.', 'transit', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFIv9AIWNgbePHan6WVFmIgeFidAvbs4io-IhyWzeLxh3J79g_LZB1KbBE9DQQewPqHGIpTa8GC9Nzw45nl7rx20b5KRXKdMUOxgYmN-HFkdUR2d3pTj-NVRIweFLfj9-mgDUmhxtAU42m1maU=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFXEOvNIwfHowjgqSstCAfDGtF_fCCoPc4bMOwRPFB3LGjoKkSFZUONyzzQptrA1qpTZDSvTssoAmUnUtE6GEcF-5x9WAbkNF8XDgf4PunmO90N-eOdXhh24NGcPHg0eKzE7D6rgaRR1WtK=s4800-w800-h600')
+]), 5, false);
 
 // Westfjords
-pin(65.7326, -23.1986, colors.base2, null, pp('Dynjandi', 'Day 4', '100m bridal-veil waterfall — Jewel of the Westfjords.', 'attraction'), 5);
-pin(66.065, -23.14, colors.base2, null, pp('Naustahvilft (Troll Seat)', 'Day 5', 'Steep hike above Ísafjörður. Dramatic mountain hollow.', 'attraction'), 4);
-pin(66.13, -23.24, colors.base2, null, pp('Bolafjall Summit', 'Day 5', 'Drive to 638m. See Greenland on clear days.', 'attraction'), 4);
-pin(65.5026, -24.5317, colors.base2, null, pp('Látrabjarg Cliffs', 'Day 6', 'Europe\'s largest bird cliff. Thousands of puffins.', 'attraction'), 5);
-pin(65.4654, -23.9878, colors.base2, null, pp('Rauðasandur Beach', 'Day 6', 'Surreal golden-red beach. Tiny black church. 4WD needed.', 'attraction'), 5);
+pin(65.7326, -23.1986, colors.base2, null, pp('Dynjandi Waterfall', 'Day 4', 'The "Jewel of the Westfjords" — a 100-meter bridal-veil cascade with six smaller waterfalls below it.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFBYkpYUJTvsEKkvvq1kwFue-LLIj8jFmWiOZx3hdAZW8f7DC4HJV6CLx5yPI2iGjrZTuZc6PVGBeBzpr6YWoE_EQTRrY1gea7LLlOQt6eevDCNerYX7FaEV2-pRbQoSazVNyCQDULhcv89=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHDdY3PS0Ycfn9CGqNnJPi8aKRPwgq6_dYzothfUIHjV3NH2UbqlUUlUJg-3CGg-4SG_ug2bIFiCfRH8K7QKH4AanELtMpDUTMrVnPuePwVCZ-rYXbN-1BS6Ai3hyGxDYl35NfKLlcmKA0KSg=s4800-w800-h600')
+]), 5, false);
+
+pin(66.065, -23.14, colors.base2, null, pp('Naustahvilft (Troll Seat)', 'Day 5', 'A steep hike above Ísafjörður to a dramatic mountain hollow shaped like a giant chair. 3 km, 300m gain.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNH3NRZIeEDqB3OHkFNf_8TrnfHKaef3-sjuPnaa9E4s-Mxnz1ZmUzklMuv4wCzD3AoCFYbm-y32y-7-gtK5iYl33nlgoMseXoBhC3287YEoQRUbCEy3qeFYiGa5O1X6Na0q-GERCRfi6w_H9A=s4800-w800-h600')
+]), 4, false);
+
+pin(66.13, -23.24, colors.base2, null, pp('Bolafjall Summit', 'Day 5', 'Drive to 638m for panoramic fjord views. On clear days you can see Greenland across the strait.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGHaxFAlPoMCSpwU9VnOaqwv_JxYftiz_3WeKp9lXKY9zkfZt-Mt9MSrPT38hVRHotlKe7Go_1hWQUXacFpjkw8ppvDxHP8BCAuXYM3mGEmkaaN_33DLl3PZ-RyGr8PSG-T5irSW2zTAOicyQ8=s4800-w800-h600')
+]), 4, false);
+
+pin(65.5026, -24.5317, colors.base2, null, pp('Látrabjarg Cliffs', 'Day 6', 'Europe\'s westernmost point and largest bird cliff — 14 km long, up to 440m high. Thousands of puffins in late June.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGkFlNEGTqlKWwIkKZtOTdcZy0eQZ9aGH_axjOqY27_IDG0D2P4yvbULRt_uo09lPcvecOmaQj_yM6MMFK-1hjTA5aCWWJcNcaWTP6z2uswD8GXOkin9RrTf2PX5m5i1eDFru9DJ1DQnOwS=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFIhOFswqOkDG9qhBDKWBlIooz9BfdvcqPCKP57nN1n8dH66_5MHsbvceSL9-ySi1PsLtrM-bZbvE9o857A67nKWq1wIxGiByPA5eQ2Oom9WWjtgudGcEPdKh0tjHVjfMaHg3Jspgf_K4vFoQ=s4800-w800-h600')
+]), 5, false);
+
+pin(65.4654, -23.9878, colors.base2, null, pp('Rauðasandur Beach', 'Day 6', 'A vast golden-red beach unlike anything else in Iceland. Steep winding access road (4WD essential). Tiny black church.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHGoaNnggmBnMHndJYpKCqWY6SepOyd8lw6_IVJt0v56x-6qBbC8DRUXiB7nHkgCAtOHagWMu1qBduKGsWpEIJypnxoI2-4xiGvr4449rt-LaeICgk6ndS8MrgyKrTtzBIeNsrWaZt8P35eow=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNG2x5rgtPpv4FMTVwfzSVjd3hjwr3-1HfI7nm7nWWkSZVddOLUQ04r4qO-zjaTBEtx1M3wvOkO8m4LpNEoK91UPGjq6n566bKeJEDMvGJs_wQttXh115hfjjIVlbbOqlBA4smcOojXTkEUcJKSsmBU5jw=s4800-w800-h600')
+]), 5, false);
 
 // Skagafjörður
-pin(65.7597, -23.4511, colors.base3, null, pp('Hrafnseyri Museum', 'Day 7 (en route)', 'Café with famous cake, turf church. Driving stop.', 'transit'), 4);
-pin(65.72, -19.518, colors.base3, null, pp('Icelandic Horse Tours', 'Day 8', 'Half-day horseback ride through mountains and rivers.', 'attraction'), 5);
-pin(65.6104, -19.5044, colors.base3, null, pp('Glaumbaer Turf Farm', 'Day 8', '19th-century turf farmstead. Maze of rooms.', 'attraction'), 5);
+pin(65.7597, -23.4511, colors.base3, null, pp('Hrafnseyri Museum', 'Day 7 (en route)', 'Charming roadside stop. Café with famous cake, turf church, and a small museum about Iceland\'s independence hero.', 'transit', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHl7ie2btPX3og3sJOMQPIcemxDBfA9dTWLbA_pocVAM3oCR0hcXVQd40g5Mjs50K-igtboTt6V_GhPJGCXvahpfCn4-29l6CbT7LsgWtBQkxh-YHqqdRDQ4aUuQCG3uBVhgUE6vF1K1lQ0mA=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGRkZHDXY6uvfjJBKvAmSx88gYO6BzYTveZK76BZjDHgYzCzzghGXA8ZvQrTNcc2wufxLqAQ7wPPZMteI7QvuY6dxHnBA6avMoYE7Ki_tmcYjvJRzj3WVFth2qLISN9hX7kwjc2ZTVrfin4Sg=s4800-w800-h600')
+]), 4, false);
+
+pin(65.72, -19.518, colors.base3, null, pp('Icelandic Horse Tours', 'Day 8', 'Half-day ride through mountain valleys, across rivers. Experience the tölt — the silky fifth gait unique to Icelandic horses.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/places/ANXAkqFZxiMvSAht3L9EMZyVWZHCicv9z7giRdEsaacVXQoKV9N0l9o9k0MjIlQomWfTP8HMFIfGd6w7U21awny2k1zyl0cUY0GzJzk=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF_03StHBEchO7yPELUZpN7BA-m_AuqtA7lNgAqT9r1J_0awMPQk5XCM58TAN3SfAcmAa48frIHAMW55auljf49NBK85rJ9bLjbKxwzBDMFD8w2tJq1TonpLYHjAAm3tCfiHzEIJzQ_xL5s_kSrCR25wg=s4800-w800-h600')
+]), 5, false);
+
+pin(65.6104, -19.5044, colors.base3, null, pp('Glaumbaer Turf Farm', 'Day 8', '19th-century turf farmstead — connected rooms like a maze. Hidden staircase inside a wardrobe. Charming café.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF6xYTcfkbE0WWtUfticiHz8q7NOs2hdOYAKnoRLBcwwH3j6Nf66RVHPKgk-_A3wYsP-bwDoYsvIa8IL38PfINMV9McgRk8RzRrh3467wZqAKja9pIWZiEWWErfdyi_3pw4ohuBH1qFrKbTFg=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF7rrWYuEvVQNs-_aFdl3a3qmsnHoYz05uPIut_FSBbNZKkvuraxJ72OazFaM0bm-ZCTyAi5jkL00yOBaU29LdW9ClfWKmavcFtpv6YdBbazd1iZ4RTVeua18iyiBp1jDJzk_TSX3KPWouAcQ=s4800-w800-h600')
+]), 5, false);
 
 // Highlands
-pin(65.224, -19.721, colors.base4, null, pp('F35 Kjölur Start', 'Day 9', 'Fill fuel! Family-friendly F-road. No river crossings.', 'transit'), 4);
-pin(64.8672, -19.55, colors.base4, null, pp('Hveravellir', 'Day 9', 'Geothermal oasis — hot spring pool between two glaciers.', 'attraction'), 5);
+pin(64.8672, -19.55, colors.base4, null, pp('Hveravellir', 'Day 9', 'Geothermal oasis in the middle of absolute nothingness. Natural hot spring pool between two glaciers.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGVF0TaBa-M3laVqOPNia0YlJiYpGePES3wyIv8AaS4KzIdU-9hHcl4XBGGGKz3f6UQg2E_jdu0Yv7wSGBCk2OmdaS-AlQTWGYUYBdSIMciLwdL73_2MaVZV9kK6sANJjzLKLc3PrVmrYdyjjZHgN_xiw=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFJTZUj4URC2-8HY9SGAUg09d2Kt68TLBLPCd05eHZwduTEC-cHxRarWwd2j5xsEeB1vj4Snk4OYfR7x_iTbq0NZbs7ffYR13En_GE0q1QY-ao-7SzrI_S1WG41AULvH31t3mXxJHZOPZuqUAI=s4800-w800-h600')
+]), 5, false);
 
-// Mývatn (pass-through)
-pin(65.6135, -16.8747, colors.base5, null, pp('Hverfjall Crater', 'Day 10 (en route)', 'Massive tephra crater. 1.5 hr rim hike, panoramic views.', 'attraction'), 5);
-pin(65.6409, -16.8093, colors.base5, null, pp('Hverir / Námafjall', 'Day 10 (en route)', 'Bubbling mud pots, sulfur vents, alien landscape.', 'attraction'), 5);
+// Mývatn
+pin(65.6135, -16.8747, colors.base5, null, pp('Hverfjall Volcano Crater', 'Day 10 (en route)', 'Massive tephra crater — 1 km diameter. 1.5 hr rim hike with panoramic views of the Mývatn region.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF1ednF3z0QRtDfeGN_IDJFBoU4ZHYk8F7SFY6x-b79O8qBk_9mc43e3XwPlHRQNMlAcnXZusTZn0urwBYOZO20eDHEp05c1-rbCrvvYk4J78K7IA8CTrcbTdxY4ksRi6qtkgPuDeSTzoimuE1ur7Lixw=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF2m1PEozY3rOZzCt7V1JMerdRiP6YicB3yu8OAWQeprstNRRWOXZkEvNhRFnuXX25fxP3iEt2ub1PIToCgt-QkPA7Y2MyAsdIfLZOVMtfZgnP5uul8q89xSR8-phkBt9ku7sWQJQxPiAbWCbw=s4800-w800-h600')
+]), 5, false);
+
+pin(65.6409, -16.8093, colors.base5, null, pp('Hverir / Námafjall', 'Day 10 (en route)', 'Bubbling mud pots, hissing sulfur vents, and alien-colored earth. Like standing on another planet.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGn6QKR10Vi__2j13Oz4l2QFNBgf553HmMqstFLQQDvGnTMPM57WtQobXv1_swA2LyyA9-LveDNKzjZBXe-_73aTqSB739rRDLp1TzltNBB8uKyH_SCaBXoa9ZZZAdh0SC8pUIYzuQjUcX2Kw=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHhuKU6lDci6VQup4TXRYsUwUhxJXdCR1KYIKnTFUwapWVyIp56zcSt_SWeh6pdvLOPBhWwxe3JAi3drpxiMZEVcyBa1DreWjSUu1wchGwHvgaQ7ITqKEPm7HsgFc8sZNwbRKv8DLW4z81oi-E=s4800-w800-h600')
+]), 5, false);
 
 // East Iceland
-pin(65.1633, -15.3069, colors.base5, null, pp('Stuðlagil Canyon', 'Day 11', 'Iceland\'s most dramatic basalt column canyon.', 'attraction'), 5);
+pin(65.1633, -15.3069, colors.base5, null, pp('Stuðlagil Canyon', 'Day 11', 'Iceland\'s most dramatic basalt column canyon. Turquoise glacial water between towering hexagonal columns.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHDd-N-prh22r_ntvcXw2PkpL9KylP2yuYExGZ5FoETEXSFpbJPQyiT5qCHEn251Vu_fxfEZ3nmcwGGaJrgCsIt3dN0S2CHaE7OauAb719bI-2vePLEVaHZu7-45Zobk0zxhOEGdQEdcy6UWPk=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFFiwFb8qrnAjv4Jvw7KzOWRRWCiA4FLDcZ7aY-CEAgK-oZ2-e-MIjWU311hNWIu6pJ18yS3Y2bmVykFRq9L04IQ6Mlob85AUz0Pf5afv5cOn0yjCgg8iH0hoZADHp5KmeIJddDXwUv8l6ZEg=s4800-w800-h600')
+]), 5, false);
 
 // South Coast
-pin(64.2733, -15.0086, colors.base6, null, pp('Vestrahorn', 'Day 12 (en route)', 'Jagged peaks rising from black sand. Quick stop.', 'attraction'), 4);
-pin(64.2552, -15.2088, colors.base6, null, pp('Höfn', 'Day 12 (en route)', 'Lobster soup capital. Scenic lunch stop.', 'transit'), 4);
-pin(64.0784, -16.2306, colors.base6, null, pp('Jökulsárlón Glacier Lagoon', 'Day 12–13', 'Icebergs floating in a glacial lagoon.', 'attraction'), 6);
-pin(64.0443, -16.1777, colors.base6, null, pp('Diamond Beach', 'Day 12–13', 'Crystal ice chunks on black volcanic sand.', 'attraction'), 5);
-pin(64.0016, -16.8812, colors.base6, null, pp('Svínafellsjökull Glacier', 'Day 13', 'Guided glacier walk or free viewpoint hike.', 'attraction'), 5);
-pin(63.7713, -18.1718, colors.base6, null, pp('Fjaðrárgljúfur Canyon', 'Day 14', 'Stunning moss-covered canyon. Easy walk.', 'attraction'), 5);
-pin(63.4143, -19.0104, colors.base6, null, pp('Reynisfjara Black Sand Beach', 'Day 14', 'Black sand, basalt columns, dramatic sea stacks.', 'attraction'), 5);
+pin(64.2733, -15.0086, colors.base6, null, pp('Vestrahorn / Stokksnes', 'Day 12 (en route)', 'Dramatic jagged peaks rising from black sand. Quick stop for photos and the Viking village film set.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFrtK7vMnGqCpaZdURDapdb4jgVubZze2-iyHUHK07TyhZIgsMaXfBhzrsgiUowwejHXOsZMsbrZMrZGGT30-AwHy4xABmwy9HhEXXCcU6iWbCpaXSJKXTOhhkd0oDBlDARHtNs9djLHpyV=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF7WlAyaR_xDg6Ft2NmK1ulS1rV9uag7yIvckLnnn80VRbb17iPJw5kAZ85X2QGCdzeUSbSHkSulZbmxE0Cf1UiZNGG2n1F3Uh7F4wgWapRFQUqAvmRbgN5HxasUXq3e94w09IlRF8VOJR0mw=s4800-w800-h600')
+]), 4, false);
+
+pin(64.2552, -15.2088, colors.base6, null, pp('Höfn', 'Day 12 (en route)', 'The lobster soup capital of Iceland. A scenic lunch stop on the drive south along the coast.', 'transit', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGzpQGmz7hteBfWKwWO_AAEy2vI5EQWWK0BgcOUa-Kgc_SaS8sFdCATdeKM8fN5fPshXMAP0gnhO8koII7nmyboQD8zO7TO-UKDvqq4kTni0IR5p20DX1-DJgqeE3MX8qnJoddJOWfW7LZGK_4=s4800-w800-h600')
+]), 4, false);
+
+pin(64.0784, -16.2306, colors.base6, null, pp('Jökulsárlón Glacier Lagoon', 'Day 12–13', 'Icebergs calving from Vatnajökull glacier drift through a vast lagoon to the sea. Utterly otherworldly.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFIzkr4iqeI4qsBHU1HL5VU1MGKfsrzKu88mp_NGLBmYpatGMNLdblT5cvCqWycloW8PONPhDzRydEMlad6q0vwwJRRz-gILePF0qXh5XoyOLsHG_joY3rPB5MmLvgF7244LvIkn-IM6xJb2DaZYKTpvg=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNEaWHSXRAnoUEzaGVQDhFe4DP2QgCjNPfCgh5LweAwtnJLJFnoZF6WsxZtditPJ3hR1INgqviSSi5Kdz6iry0TOHloMELP9exmhwXR8bBeFoKJ7DKIKhnSj8LSwAYhR0NKOmpnfMdsmBbTMGVWWqqtB=s4800-w800-h600')
+]), 6, false);
+
+pin(64.0443, -16.1777, colors.base6, null, pp('Diamond Beach', 'Day 12–13', 'Crystal-clear ice chunks washed ashore on jet-black volcanic sand. Each piece unique, glowing in the light.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFRhQ5bp9j5pBIbnNVsRlQwbun8q9i2WulBqb_aRoauI2TytQX1QDcDXYOr3oEgYmnpA8wIJfvfz9j-BKGB6WWXjqaRGXMUHSoWVDAcJ98nwQIW4dx5am5VyJhaNH6raU5G5g-_B4zjMvkN=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNEPr7TzKTeN7AXDEhZ5UZAMEBGm7B0X4nCFF3xO_xCkHZPrgP7rZzNz66swtlg5YwosTU3LixpnkkLFnnzKQIuVzCbIDpS06PixnQUYH1goTRxphGNtNxMudiOLqimNbK0DfICrexhKIN3DmA=s4800-w800-h600')
+]), 5, false);
+
+pin(64.0016, -16.8812, colors.base6, null, pp('Svínafellsjökull Glacier', 'Day 13', 'Dramatic glacier tongue from Vatnajökull. Guided glacier walk or free viewpoint hike. Interstellar filming location.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNG4vNw2gxyNqIOtnkyKDaGXkAbECdQMs5WLxz5nfoAADy8g7Pe-T7t6YZ1RsczaJlQDOf-WN60qyNPhvkwd_l2Yjovzg9g5kuaT4kd0EY5etj7-s6DoKaDRKtayFbpHweRKyQZFpn6X_RfslQ=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNG33aQbD5GcZewJcFNpqBUPyrkNehSLJbLxASBTFjaSHYxfQMiN4CzZDxVGNu7a8yDoj2y61zPHtLmfajCZrx29t4RnGAz0jE3aQABi4s5zwI8gbDiMX7-BbBdI9qvArkyZgifA8ghp4AW5HW7ABCtz=s4800-w800-h600')
+]), 5, false);
+
+pin(63.7713, -18.1718, colors.base6, null, pp('Fjaðrárgljúfur Canyon', 'Day 14', 'Stunning 2 km moss-covered canyon, up to 100m deep. Easy walking trail along the rim with multiple viewpoints.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHqPiwD6SIXmiKdZLP2Fgvk-t28WlxO7ryd_YlwChrecD8nQ0Pgp9kXXU83GVwXP719uKLWlUpixRzx8bt5miYamQkyFK02JER4-pX_uFB7AujtLWENHb_1fdb-EVABv5QGAXphSkaWTXF7bQ=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGw8QJYeGatdV6jfDOIkCvPe0yUlcHsQwJaVUAhoBWp704EDc7c8d23UNl6wAGI1RjyQTFo_Yw6e4_FqnNJMjoO5JvJE8bR9HftcDf4xCsSFAE5iqU65bQHDeBwtuBaeY6UcEc_UT59R8vPR4KK0QUx_g=s4800-w800-h600')
+]), 5, false);
+
+pin(63.4143, -19.0104, colors.base6, null, pp('Reynisfjara Black Sand Beach', 'Day 14', 'Jet-black volcanic sand, towering basalt columns, dramatic sea stacks. Powerful Atlantic waves — stay back from the surf.', 'attraction', [
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF6krRd1PWqEWfmdeFBSGnYHujws27kYb4jZHSNTrDw6StiejZncUa-IT0S5T9eZrrnpIvfVIV96DziFTT3UsYFBe8JkA-w9T3PvlQARdiwZx5qeHpPPFeuRWkfgfxl3HwvSzaHPIzoSR5YMsC0LQht=s4800-w800-h600'),
+  gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHQvquFerQ8L_n8vNf-jxciCGj1iE6LzTa5edaR0aPSFrouDs49J-mHBPbep4iQZdd-qgurgUMpfJtfhHSOePhU96qARbO4yFvDgeuc-jDpuLqftZNd5IILMt0rbFXzkpWqnnW_oaWw9KY_tw=s4800-w800-h600')
+]), 5, false);
 
 // ===== ROUTE LINES =====
-// KEF → Grundarfjörður
 L.polyline([[63.9948,-22.6239],[64.15,-22.0],[64.4,-21.8],[64.7,-22.5],[64.8,-23.0],[64.926,-23.255]], {color: colors.base1, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
-
-// Grundarfjörður → Stykkishólmur → Ferry → Dynjandi → Ísafjörður
 L.polyline([[64.926,-23.255],[65.0724,-22.7334]], {color: colors.base2, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
-L.polyline([[65.0724,-22.7334],[65.52,-23.19]], {color: '#6699bb', weight: 2.5, opacity: 0.5, dashArray: '4,8'}).addTo(map).bindPopup('<div style="color:#88aacc;font-size:12px;">Baldur Ferry<br>2.5 hr crossing</div>');
+L.polyline([[65.0724,-22.7334],[65.52,-23.19]], {color: '#6699bb', weight: 2.5, opacity: 0.5, dashArray: '4,8'}).addTo(map).bindPopup('<div style="color:#88aacc;font-size:12px;font-family:DM Sans,sans-serif;">⛴ Baldur Ferry · 2.5 hr crossing</div>');
 L.polyline([[65.52,-23.19],[65.57,-23.17],[65.7326,-23.1986],[66.075,-23.1248]], {color: colors.base2, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
-
-// Ísafjörður → Látrabjarg/Rauðasandur (day trip)
 L.polyline([[66.075,-23.1248],[65.8,-23.5],[65.5,-24.0],[65.5026,-24.5317]], {color: colors.base2, weight: 2, opacity: 0.4, dashArray: '4,6'}).addTo(map);
-
-// Ísafjörður → Skagafjörður
 L.polyline([[66.075,-23.1248],[65.9,-22.5],[65.75,-21.5],[65.8,-21.0],[65.75,-20.5],[65.7424,-19.6403]], {color: colors.base3, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
-
-// Skagafjörður → F35 → Hveravellir → Kerlingarfjöll
 L.polyline([[65.7424,-19.6403],[65.224,-19.721]], {color: colors.base4, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
-L.polyline([[65.224,-19.721],[64.8672,-19.55],[64.6834,-19.2998]], {color: colors.froad, weight: 3.5, opacity: 0.8, dashArray: '3,5'}).addTo(map).bindPopup('<div style="color:#e05555;font-size:12px;font-weight:600;">F35 Kjölur Highland Road<br>~160 km unpaved, no river crossings</div>');
-
-// Kerlingarfjöll → F35 north → Route 1 east → Mývatn → Egilsstaðir
+L.polyline([[65.224,-19.721],[64.8672,-19.55],[64.6834,-19.2998]], {color: colors.froad, weight: 3.5, opacity: 0.8, dashArray: '3,5'}).addTo(map).bindPopup('<div style="color:#e05555;font-size:12px;font-weight:600;font-family:DM Sans,sans-serif;">F35 Kjölur Highland Road<br>~160 km unpaved · no river crossings</div>');
 L.polyline([[64.6834,-19.2998],[64.87,-19.55],[65.224,-19.721]], {color: colors.froad, weight: 3, opacity: 0.6, dashArray: '3,5'}).addTo(map);
 L.polyline([[65.224,-19.721],[65.5,-19.0],[65.68,-18.1],[65.64,-16.81],[65.6135,-16.8747]], {color: colors.base5, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
 L.polyline([[65.6135,-16.8747],[65.5,-15.5],[65.2609,-14.3994]], {color: colors.base5, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
-
-// Egilsstaðir → Stuðlagil (day trip)
 L.polyline([[65.2609,-14.3994],[65.1633,-15.3069]], {color: colors.base5, weight: 2, opacity: 0.4, dashArray: '4,6'}).addTo(map);
-
-// Egilsstaðir → Höfn → Jökulsárlón → Vík
 L.polyline([[65.2609,-14.3994],[65.0,-14.5],[64.5,-14.8],[64.2552,-15.2088],[64.2733,-15.0086]], {color: colors.base6, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
 L.polyline([[64.2552,-15.2088],[64.0784,-16.2306],[64.0443,-16.1777],[64.0016,-16.8812],[63.87,-17.5],[63.7713,-18.1718],[63.4177,-18.9974]], {color: colors.base6, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
-
-// Vík → KEF
 L.polyline([[63.4177,-18.9974],[63.5,-19.5],[63.7,-20.3],[63.85,-21.0],[63.9948,-22.6239]], {color: '#5588aa', weight: 3, opacity: 0.5, dashArray: '8,6'}).addTo(map);
 
-// Add custom CSS for labels
+// Label styling
 const style = document.createElement('style');
-style.textContent = `
-  .map-label {
-    background: rgba(10,20,40,0.85) !important;
-    border: 1px solid rgba(255,255,255,0.15) !important;
-    border-radius: 6px !important;
-    color: #d0dae8 !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    padding: 3px 8px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
-  }
-  .map-label::before {
-    border-right-color: rgba(10,20,40,0.85) !important;
-  }
-`;
+style.textContent = `.map-label{background:rgba(10,20,40,0.88)!important;border:1px solid rgba(255,255,255,0.15)!important;border-radius:6px!important;color:#d0dae8!important;font-family:'DM Sans',sans-serif!important;font-size:11px!important;font-weight:600!important;padding:3px 8px!important;box-shadow:0 2px 8px rgba(0,0,0,0.4)!important;}.map-label::before{border-right-color:rgba(10,20,40,0.88)!important;}`;
 document.head.appendChild(style);
 
-// Fit to bounds
 map.fitBounds([[63.0, -25.0], [66.5, -13.5]], { padding: [60, 40] });
 </script>
 </body>
