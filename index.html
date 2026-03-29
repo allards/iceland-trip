@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iceland Family Adventure — Route Map 2026</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: #0a0f1a; }
+  #map { width: 100vw; height: 100vh; }
+
+  .title-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: linear-gradient(135deg, #0a1628ee, #162544ee);
+    backdrop-filter: blur(12px);
+    padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .title-bar h1 {
+    font-family: 'DM Serif Display', serif;
+    color: #e8edf5; font-size: 20px; font-weight: 400;
+  }
+  .title-bar h1 span { color: #f0a050; }
+  .title-bar .dates { color: #8899bb; font-size: 13px; }
+
+  .legend {
+    position: fixed; bottom: 24px; left: 24px; z-index: 1000;
+    background: #0d1525ee; backdrop-filter: blur(12px);
+    border-radius: 12px; padding: 16px 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    max-width: 340px;
+  }
+  .legend h3 {
+    color: #c0ccdd; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 600;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 5px 0; color: #b0bdd0; font-size: 12px;
+  }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.15);
+  }
+  .legend-item .nights {
+    color: #6a7a94; font-size: 11px; margin-left: auto;
+  }
+
+  .drive-info {
+    position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+    background: #0d1525ee; backdrop-filter: blur(12px);
+    border-radius: 12px; padding: 16px 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    max-width: 260px;
+  }
+  .drive-info h3 {
+    color: #c0ccdd; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 600;
+  }
+  .drive-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 0; font-size: 11px;
+  }
+  .drive-row .label { color: #8095b0; }
+  .drive-row .time { color: #d0dae8; font-weight: 600; }
+
+  /* Custom popup */
+  .leaflet-popup-content-wrapper {
+    background: #0f1a2e; color: #d0dae8;
+    border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .leaflet-popup-tip { background: #0f1a2e; }
+  .leaflet-popup-content { margin: 12px 16px; font-family: 'DM Sans', sans-serif; }
+  .popup-title { font-family: 'DM Serif Display', serif; font-size: 15px; color: #f0f4fa; margin-bottom: 4px; }
+  .popup-day { font-size: 11px; color: #f0a050; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .popup-desc { font-size: 12px; color: #8899bb; margin-top: 6px; line-height: 1.5; }
+  .popup-type { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-top: 6px; font-weight: 600; }
+  .popup-type.base { background: rgba(80,180,120,0.2); color: #60d090; }
+  .popup-type.attraction { background: rgba(240,160,80,0.2); color: #f0a050; }
+  .popup-type.transit { background: rgba(100,160,240,0.2); color: #70b0f0; }
+
+  @media (max-width: 768px) {
+    .legend, .drive-info { display: none; }
+    .title-bar h1 { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="title-bar">
+  <h1><span>Iceland</span> Family Adventure — Full Route Map</h1>
+  <div class="dates">Jun 28 – Jul 12, 2026 · 15 days · 14 nights · Ring Road + Westfjords + Highlands</div>
+</div>
+
+<div class="legend">
+  <h3>Home Bases & Overnights</h3>
+  <div class="legend-item"><div class="legend-dot" style="background:#50b478"></div> 1. Grundarfjörður <span class="nights">3 nights</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4a90d9"></div> 2. Ísafjörður <span class="nights">3 nights</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d97b4a"></div> 3. Skagafjörður <span class="nights">2 nights</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c94a4a"></div> 4. Kerlingarfjöll <span class="nights">1 night</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9b59b6"></div> 5. Egilsstaðir <span class="nights">2 nights</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e6c74a"></div> 6. Vík <span class="nights">3 nights</span></div>
+</div>
+
+<div class="drive-info">
+  <h3>Drive Times Between Bases</h3>
+  <div class="drive-row"><span class="label">KEF → Grundarfjörður</span><span class="time">~2.5 hrs</span></div>
+  <div class="drive-row"><span class="label">Grundarfj. → Ísafjörður</span><span class="time">~4.5 hrs*</span></div>
+  <div class="drive-row"><span class="label">Ísafjörður → Skagafjörður</span><span class="time">~5–6 hrs</span></div>
+  <div class="drive-row"><span class="label">Skagafjörður → Kerlingarfj.</span><span class="time">~3–4 hrs</span></div>
+  <div class="drive-row"><span class="label">Kerlingarfj. → Egilsstaðir</span><span class="time">~8–10 hrs†</span></div>
+  <div class="drive-row"><span class="label">Egilsstaðir → Vík</span><span class="time">~6–8 hrs†</span></div>
+  <div class="drive-row"><span class="label">Vík → KEF</span><span class="time">~2.5 hrs</span></div>
+  <div style="color:#5a6e88;font-size:10px;margin-top:8px;">* incl. 2.5 hr ferry &nbsp; † incl. stops</div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const map = L.map('map', {
+  center: [65.0, -18.5],
+  zoom: 6,
+  zoomControl: true,
+  attributionControl: true
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  maxZoom: 18
+}).addTo(map);
+
+// Color scheme for each stay
+const colors = {
+  base1: '#50b478', base2: '#4a90d9', base3: '#d97b4a',
+  base4: '#c94a4a', base5: '#9b59b6', base6: '#e6c74a',
+  transit: '#5588aa', froad: '#e05555'
+};
+
+// Helper: create a circle marker
+function pin(lat, lng, color, label, popup, radius = 7) {
+  const m = L.circleMarker([lat, lng], {
+    radius: radius, fillColor: color, color: '#fff',
+    weight: 1.5, opacity: 0.9, fillOpacity: 0.85
+  }).addTo(map);
+  if (popup) m.bindPopup(popup);
+  if (label) {
+    m.bindTooltip(label, {
+      permanent: true, direction: 'right', offset: [10, 0],
+      className: 'map-label'
+    });
+  }
+  return m;
+}
+
+// Helper: popup HTML
+function pp(title, day, desc, type) {
+  const cls = type === 'base' ? 'base' : type === 'transit' ? 'transit' : 'attraction';
+  const typeLabel = type === 'base' ? 'HOME BASE' : type === 'transit' ? 'TRANSIT' : 'ATTRACTION';
+  return `<div class="popup-day">${day}</div><div class="popup-title">${title}</div><div class="popup-desc">${desc}</div><div class="popup-type ${cls}">${typeLabel}</div>`;
+}
+
+// ===== BASES (large pins with labels) =====
+pin(63.9948, -22.6239, '#fff', null, pp('Keflavík Airport', 'Day 1 & Day 16', 'Arrive Jun 28 6:20am. Depart Jul 12 8:00pm.', 'transit'), 6);
+pin(64.926, -23.255, colors.base1, 'Grundarfjörður', pp('Grundarfjörður', 'Days 1–3 · Jun 28–30', '3 nights. Fishing village on Snæfellsnes. Base for glacier national park, Kirkjufell, and waterfalls.', 'base'), 10);
+pin(66.075, -23.1248, colors.base2, 'Ísafjörður', pp('Ísafjörður', 'Days 4–6 · Jul 1–3', '3 nights. Capital of the Westfjords. Base for Dynjandi, Látrabjarg puffin cliffs, Rauðasandur, and mountain hikes.', 'base'), 10);
+pin(65.7424, -19.6403, colors.base3, 'Skagafjörður', pp('Skagafjörður', 'Days 7–8 · Jul 4–5', '2 nights. Iceland\'s horse country. Half-day horseback ride and Glaumbaer turf farm.', 'base'), 10);
+pin(64.6834, -19.2998, colors.base4, 'Kerlingarfjöll', pp('Kerlingarfjöll Highland Base', 'Day 9 · Jul 6', '1 night. Central Highlands via F35 Kjölur. Hveravellir hot spring. Hveradalir geothermal valley hike.', 'base'), 10);
+pin(65.2609, -14.3994, colors.base5, 'Egilsstaðir', pp('Egilsstaðir', 'Days 10–11 · Jul 7–8', '2 nights. East Iceland hub. Mývatn geothermal pass-through on arrival. Stuðlagil Canyon day trip.', 'base'), 10);
+pin(63.4177, -18.9974, colors.base6, 'Vík', pp('Vík', 'Days 12–14 · Jul 9–11', '3 nights. South coast base. Glacier walk, Jökulsárlón, Diamond Beach, Reynisfjara black sand beach, Fjaðrárgljúfur canyon.', 'base'), 10);
+
+// ===== ATTRACTIONS (smaller pins) =====
+// Snæfellsnes
+pin(64.8, -23.7833, colors.base1, null, pp('Snæfellsjökull National Park', 'Day 2', 'Lava fields, coastal cliffs, glacier-capped volcano. 10 km day hike.', 'attraction'), 5);
+pin(64.9104, -23.2207, colors.base1, null, pp('Grundarfoss', 'Day 3', 'Uncrowded waterfall. Flat 45-min walk through horse meadows.', 'attraction'), 5);
+pin(64.9417, -23.3069, colors.base1, null, pp('Kirkjufell', 'Day 3', 'Iceland\'s most photographed mountain. Waterfall viewpoint.', 'attraction'), 5);
+pin(65.0724, -22.7334, colors.base1, null, pp('Stykkishólmur', 'Day 3–4', 'Colorful harbor. Baldur ferry departs here to the Westfjords.', 'transit'), 5);
+
+// Westfjords
+pin(65.7326, -23.1986, colors.base2, null, pp('Dynjandi', 'Day 4', '100m bridal-veil waterfall — Jewel of the Westfjords.', 'attraction'), 5);
+pin(66.065, -23.14, colors.base2, null, pp('Naustahvilft (Troll Seat)', 'Day 5', 'Steep hike above Ísafjörður. Dramatic mountain hollow.', 'attraction'), 4);
+pin(66.13, -23.24, colors.base2, null, pp('Bolafjall Summit', 'Day 5', 'Drive to 638m. See Greenland on clear days.', 'attraction'), 4);
+pin(65.5026, -24.5317, colors.base2, null, pp('Látrabjarg Cliffs', 'Day 6', 'Europe\'s largest bird cliff. Thousands of puffins.', 'attraction'), 5);
+pin(65.4654, -23.9878, colors.base2, null, pp('Rauðasandur Beach', 'Day 6', 'Surreal golden-red beach. Tiny black church. 4WD needed.', 'attraction'), 5);
+
+// Skagafjörður
+pin(65.7597, -23.4511, colors.base3, null, pp('Hrafnseyri Museum', 'Day 7 (en route)', 'Café with famous cake, turf church. Driving stop.', 'transit'), 4);
+pin(65.72, -19.518, colors.base3, null, pp('Icelandic Horse Tours', 'Day 8', 'Half-day horseback ride through mountains and rivers.', 'attraction'), 5);
+pin(65.6104, -19.5044, colors.base3, null, pp('Glaumbaer Turf Farm', 'Day 8', '19th-century turf farmstead. Maze of rooms.', 'attraction'), 5);
+
+// Highlands
+pin(65.224, -19.721, colors.base4, null, pp('F35 Kjölur Start', 'Day 9', 'Fill fuel! Family-friendly F-road. No river crossings.', 'transit'), 4);
+pin(64.8672, -19.55, colors.base4, null, pp('Hveravellir', 'Day 9', 'Geothermal oasis — hot spring pool between two glaciers.', 'attraction'), 5);
+
+// Mývatn (pass-through)
+pin(65.6135, -16.8747, colors.base5, null, pp('Hverfjall Crater', 'Day 10 (en route)', 'Massive tephra crater. 1.5 hr rim hike, panoramic views.', 'attraction'), 5);
+pin(65.6409, -16.8093, colors.base5, null, pp('Hverir / Námafjall', 'Day 10 (en route)', 'Bubbling mud pots, sulfur vents, alien landscape.', 'attraction'), 5);
+
+// East Iceland
+pin(65.1633, -15.3069, colors.base5, null, pp('Stuðlagil Canyon', 'Day 11', 'Iceland\'s most dramatic basalt column canyon.', 'attraction'), 5);
+
+// South Coast
+pin(64.2733, -15.0086, colors.base6, null, pp('Vestrahorn', 'Day 12 (en route)', 'Jagged peaks rising from black sand. Quick stop.', 'attraction'), 4);
+pin(64.2552, -15.2088, colors.base6, null, pp('Höfn', 'Day 12 (en route)', 'Lobster soup capital. Scenic lunch stop.', 'transit'), 4);
+pin(64.0784, -16.2306, colors.base6, null, pp('Jökulsárlón Glacier Lagoon', 'Day 12–13', 'Icebergs floating in a glacial lagoon.', 'attraction'), 6);
+pin(64.0443, -16.1777, colors.base6, null, pp('Diamond Beach', 'Day 12–13', 'Crystal ice chunks on black volcanic sand.', 'attraction'), 5);
+pin(64.0016, -16.8812, colors.base6, null, pp('Svínafellsjökull Glacier', 'Day 13', 'Guided glacier walk or free viewpoint hike.', 'attraction'), 5);
+pin(63.7713, -18.1718, colors.base6, null, pp('Fjaðrárgljúfur Canyon', 'Day 14', 'Stunning moss-covered canyon. Easy walk.', 'attraction'), 5);
+pin(63.4143, -19.0104, colors.base6, null, pp('Reynisfjara Black Sand Beach', 'Day 14', 'Black sand, basalt columns, dramatic sea stacks.', 'attraction'), 5);
+
+// ===== ROUTE LINES =====
+// KEF → Grundarfjörður
+L.polyline([[63.9948,-22.6239],[64.15,-22.0],[64.4,-21.8],[64.7,-22.5],[64.8,-23.0],[64.926,-23.255]], {color: colors.base1, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+
+// Grundarfjörður → Stykkishólmur → Ferry → Dynjandi → Ísafjörður
+L.polyline([[64.926,-23.255],[65.0724,-22.7334]], {color: colors.base2, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+L.polyline([[65.0724,-22.7334],[65.52,-23.19]], {color: '#6699bb', weight: 2.5, opacity: 0.5, dashArray: '4,8'}).addTo(map).bindPopup('<div style="color:#88aacc;font-size:12px;">Baldur Ferry<br>2.5 hr crossing</div>');
+L.polyline([[65.52,-23.19],[65.57,-23.17],[65.7326,-23.1986],[66.075,-23.1248]], {color: colors.base2, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+
+// Ísafjörður → Látrabjarg/Rauðasandur (day trip)
+L.polyline([[66.075,-23.1248],[65.8,-23.5],[65.5,-24.0],[65.5026,-24.5317]], {color: colors.base2, weight: 2, opacity: 0.4, dashArray: '4,6'}).addTo(map);
+
+// Ísafjörður → Skagafjörður
+L.polyline([[66.075,-23.1248],[65.9,-22.5],[65.75,-21.5],[65.8,-21.0],[65.75,-20.5],[65.7424,-19.6403]], {color: colors.base3, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+
+// Skagafjörður → F35 → Hveravellir → Kerlingarfjöll
+L.polyline([[65.7424,-19.6403],[65.224,-19.721]], {color: colors.base4, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+L.polyline([[65.224,-19.721],[64.8672,-19.55],[64.6834,-19.2998]], {color: colors.froad, weight: 3.5, opacity: 0.8, dashArray: '3,5'}).addTo(map).bindPopup('<div style="color:#e05555;font-size:12px;font-weight:600;">F35 Kjölur Highland Road<br>~160 km unpaved, no river crossings</div>');
+
+// Kerlingarfjöll → F35 north → Route 1 east → Mývatn → Egilsstaðir
+L.polyline([[64.6834,-19.2998],[64.87,-19.55],[65.224,-19.721]], {color: colors.froad, weight: 3, opacity: 0.6, dashArray: '3,5'}).addTo(map);
+L.polyline([[65.224,-19.721],[65.5,-19.0],[65.68,-18.1],[65.64,-16.81],[65.6135,-16.8747]], {color: colors.base5, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+L.polyline([[65.6135,-16.8747],[65.5,-15.5],[65.2609,-14.3994]], {color: colors.base5, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+
+// Egilsstaðir → Stuðlagil (day trip)
+L.polyline([[65.2609,-14.3994],[65.1633,-15.3069]], {color: colors.base5, weight: 2, opacity: 0.4, dashArray: '4,6'}).addTo(map);
+
+// Egilsstaðir → Höfn → Jökulsárlón → Vík
+L.polyline([[65.2609,-14.3994],[65.0,-14.5],[64.5,-14.8],[64.2552,-15.2088],[64.2733,-15.0086]], {color: colors.base6, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+L.polyline([[64.2552,-15.2088],[64.0784,-16.2306],[64.0443,-16.1777],[64.0016,-16.8812],[63.87,-17.5],[63.7713,-18.1718],[63.4177,-18.9974]], {color: colors.base6, weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+
+// Vík → KEF
+L.polyline([[63.4177,-18.9974],[63.5,-19.5],[63.7,-20.3],[63.85,-21.0],[63.9948,-22.6239]], {color: '#5588aa', weight: 3, opacity: 0.5, dashArray: '8,6'}).addTo(map);
+
+// Add custom CSS for labels
+const style = document.createElement('style');
+style.textContent = `
+  .map-label {
+    background: rgba(10,20,40,0.85) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 6px !important;
+    color: #d0dae8 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 3px 8px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+  }
+  .map-label::before {
+    border-right-color: rgba(10,20,40,0.85) !important;
+  }
+`;
+document.head.appendChild(style);
+
+// Fit to bounds
+map.fitBounds([[63.0, -25.0], [66.5, -13.5]], { padding: [60, 40] });
+</script>
+</body>
+</html>
