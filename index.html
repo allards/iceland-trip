@@ -43,22 +43,22 @@
 </div>
 <div class="legend">
   <h3>Stays & Overnights</h3>
-  <div class="legend-item"><div class="legend-dot" style="background:#50b478"></div> 1. Grundarfjörður <span class="type type-airbnb">Airbnb</span><span class="nights">4 nights</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#50b478"></div> 1. Ólafsvík <span class="type type-airbnb">Airbnb</span><span class="nights">4 nights</span></div>
   <div class="legend-item"><div class="legend-dot" style="background:#4a90d9"></div> 2. Ísafjörður <span class="type type-airbnb">Airbnb</span><span class="nights">4 nights</span></div>
-  <div class="legend-item"><div class="legend-dot" style="background:#d97b4a"></div> 3. Skagafjörður <span class="type type-airbnb">Airbnb</span><span class="nights">2 nights</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d97b4a"></div> 3. Blönduós <span class="type type-airbnb">Airbnb</span><span class="nights">2 nights</span></div>
   <div class="legend-item"><div class="legend-dot" style="background:#c94a4a"></div> 4a. Kerlingarfjöll <span class="type type-camp">Camping</span><span class="nights">2 nights</span></div>
   <div class="legend-item"><div class="legend-dot" style="background:#e6734a"></div> 4b. Landmannalaugar <span class="type type-camp">Camping</span><span class="nights">1 night</span></div>
-  <div class="legend-item"><div class="legend-dot" style="background:#7aaa50"></div> 5. Selfoss area <span class="type type-airbnb">Airbnb</span><span class="nights">1 night</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7aaa50"></div> 5. Flúðir <span class="type type-airbnb">Airbnb</span><span class="nights">1 night</span></div>
 </div>
 <div class="drive-info">
   <h3>Drive Times Between Bases</h3>
-  <div class="drive-row"><span class="label">KEF → Grundarfjörður</span><span class="time">~2.5 hrs</span></div>
-  <div class="drive-row"><span class="label">Grundarfj. → Ísafjörður</span><span class="time">~4.5 hrs*</span></div>
-  <div class="drive-row"><span class="label">Ísafjörður → Skagafjörður</span><span class="time">~5–6 hrs</span></div>
-  <div class="drive-row"><span class="label">Skagafjörður → Kerlingarfj.</span><span class="time">~3–4 hrs</span></div>
+  <div class="drive-row"><span class="label">KEF → Ólafsvík</span><span class="time">~2.5 hrs</span></div>
+  <div class="drive-row"><span class="label">Ólafsvík → Ísafjörður</span><span class="time">~5 hrs*</span></div>
+  <div class="drive-row"><span class="label">Ísafjörður → Blönduós</span><span class="time">~4.5 hrs</span></div>
+  <div class="drive-row"><span class="label">Blönduós → Kerlingarfj.</span><span class="time">~3 hrs</span></div>
   <div class="drive-row"><span class="label">Kerlingarfj. → Landmannal.</span><span class="time">~3–4 hrs</span></div>
-  <div class="drive-row"><span class="label">Landmannalaugar → Selfoss</span><span class="time">~2.5 hrs</span></div>
-  <div class="drive-row"><span class="label">Selfoss → KEF</span><span class="time">~1 hr</span></div>
+  <div class="drive-row"><span class="label">Landmannalaugar → Flúðir</span><span class="time">~2.5 hrs</span></div>
+  <div class="drive-row"><span class="label">Flúðir → KEF</span><span class="time">~1.5 hrs</span></div>
   <div style="color:#5a6e88;font-size:10px;margin-top:8px;">* incl. 2.5 hr ferry</div>
 </div>
 <div id="map"></div>
@@ -96,7 +96,7 @@ return m}
 // ===== BASES =====
 pin(63.9948,-22.6239,'#aabbcc',null,pp('Keflavík Airport','Day 1 & Day 15','Arrive Sun Jun 28 6:20am. Depart Sun Jul 12 8:00pm.','transit',['https://lh3.googleusercontent.com/places/ANXAkqEcccwhFcHRUejayyCL-uuErWwLx9aon3wygLVun4N7R48U5frzr55aV-5GOFGo7ENTbHzynAiDxSbeF1YG3iZROUMY8p2Upcc=s800-w400-h280']),6,false);
 
-pin(64.926,-23.255,C.b1,'Grundarfjörður',pp('Grundarfjörður — Stay 1','Days 1–4 · Jun 28 – Jul 2 · 4 nights','Snæfellsnes Peninsula. Glacier hike, national park, Kirkjufell, waterfalls. Two rest days built in.','base',
+pin(64.893,-23.720,C.b1,'Ólafsvík',pp('Ólafsvík — Stay 1','Days 1–4 · Jun 28 – Jul 2 · 4 nights','Snæfellsnes Peninsula. Closest base to the glacier. Glacier hike, national park, Kirkjufell, waterfalls. Rest day built in.','base',
 [gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGWdwa9VLHxOOoXETU2cRVDud1Dq1bn_Pb0BMuTEsSpitXxuRvlBEVKixPF6ws_5XP1qOu-U_iLkaOFEg0N0YP_GuW7rJs9Wvz1ZxekLmwt8_rscZUVYNkbJV8n0onV9Qqj_8CRq6gS-CB2-Q=s4800-w800-h600'),
 gp('https://lh3.googleusercontent.com/place-photos/AL8-SNF3Djrk4Mpk4I9wccCi8-vizR6CXuEok_lhpUnOqmTgoA_VVNcm0gTNiuOaoWR5aWtp2xbBHUC-l4v49UqXPe9RjQJqWXdUiQ8r0zRn-yIEwFhLIUZEEadDEzberuNhs6WHxuWlcsOYUaQJRw=s4800-w800-h600')]),11,true);
 
@@ -104,9 +104,9 @@ pin(66.075,-23.1248,C.b2,'Ísafjörður',pp('Ísafjörður — Stay 2','Days 5�
 [gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFayTUMknvsahOmpl6Gg696snkgathAYwse-71UZhcqK66TS40IEwd9LDipSiFDqJTLZ4XuVxzSEF9RI0rk7lJbw-FWPkgfNDbXSVRp_-qiTeAL9dQEf-Cn-oVSQeXsAwA4ISYacJWLUiYZUw=s4800-w800-h600'),
 gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGVknL_SFvH8z6fDP8iRdgPS7JdhKIOTRoCf9f73EjAm1YJm1i-g3TqW2voC9lqX_XTBfVcRTkrcrzg5XA3S8-wNymWACqt90yBbZVdtezXR4J6YXfKNHyGGaTlqGeHfu_DIu4AfCQKgt3Q=s4800-w800-h600')]),11,true);
 
-pin(65.7424,-19.6403,C.b3,'Skagafjörður',pp('Skagafjörður — Stay 3','Days 9–10 · Jul 6 – 8 · 2 nights','Iceland\'s horse capital. Half-day ride, Glaumbaer turf farm.','base',
-[gp('https://lh3.googleusercontent.com/places/ANXAkqFZxiMvSAht3L9EMZyVWZHCicv9z7giRdEsaacVXQoKV9N0l9o9k0MjIlQomWfTP8HMFIfGd6w7U21awny2k1zyl0cUY0GzJzk=s4800-w800-h600'),
-gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFiAQLeOVM9oivi236AWD3F4NKxeEYXG6DgTQZcA91GnoQEE1Chu3FQ-Pzi7IGNzaijK76BOixNaEP58rv2SV_wEwKUGRz1Us1D2un8MYRMhNQEdPaTJw7axhwRdS3q3B1cllUgiag-wvjkKSM=s4800-w800-h600')]),11,true);
+pin(65.659,-20.285,C.b3,'Blönduós',pp('Blönduós — Stay 3','Days 9–10 · Jul 6 – 8 · 2 nights','Gateway to horse country. Half-day ride (~1 hr away), Glaumbaer turf farm (~50 min). Comfortable recharge before the Highlands.','base',
+[gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFiAQLeOVM9oivi236AWD3F4NKxeEYXG6DgTQZcA91GnoQEE1Chu3FQ-Pzi7IGNzaijK76BOixNaEP58rv2SV_wEwKUGRz1Us1D2un8MYRMhNQEdPaTJw7axhwRdS3q3B1cllUgiag-wvjkKSM=s4800-w800-h600'),
+gp('https://lh3.googleusercontent.com/places/ANXAkqFZxiMvSAht3L9EMZyVWZHCicv9z7giRdEsaacVXQoKV9N0l9o9k0MjIlQomWfTP8HMFIfGd6w7U21awny2k1zyl0cUY0GzJzk=s4800-w800-h600')]),11,true);
 
 pin(64.6834,-19.2998,C.b4,'Kerlingarfjöll ⛺',pp('Kerlingarfjöll — Camping','Days 11–12 · Jul 8 – 10 · 2 nights','Central Highlands. F35 Kjölur drive, Hveravellir hot spring, Hveradalir geothermal valley. Camp at Highland Base.','camping',
 [gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGnJ1q2MdUXZSo8nBcZS_kZfE2aWaR0Q3kn-rMmlyyJ57BWJYzsGBk5prEKAe8cdcJ_TeVVEiEZ4wsebtNjLwDe67NGmlUATIx0Ela0EJdrn2Sjz5Hbr-M095cyY6U_CkO3URQAtYpj_8VL2xJ46-DffQ=s4800-w800-h600'),
@@ -116,7 +116,7 @@ pin(63.983,-19.067,C.b4b,'Landmannalaugar ⛺',pp('Landmannalaugar — Camping',
 [gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHqPiwD6SIXmiKdZLP2Fgvk-t28WlxO7ryd_YlwChrecD8nQ0Pgp9kXXU83GVwXP719uKLWlUpixRzx8bt5miYamQkyFK02JER4-pX_uFB7AujtLWENHb_1fdb-EVABv5QGAXphSkaWTXF7bQ=s4800-w800-h600'),
 gp('https://lh3.googleusercontent.com/place-photos/AL8-SNGw8QJYeGatdV6jfDOIkCvPe0yUlcHsQwJaVUAhoBWp704EDc7c8d23UNl6wAGI1RjyQTFo_Yw6e4_FqnNJMjoO5JvJE8bR9HftcDf4xCsSFAE5iqU65bQHDeBwtuBaeY6UcEc_UT59R8vPR4KK0QUx_g=s4800-w800-h600')]),11,true);
 
-pin(63.935,-20.99,C.b5,'Selfoss area',pp('Selfoss / Flúðir — Stay 5','Day 14 · Jul 11 · 1 night','Recharge night. Shower, laundry, dinner. Short drive to KEF next morning.','base',
+pin(64.132,-20.313,C.b5,'Flúðir',pp('Flúðir — Stay 5','Day 14 · Jul 11 · 1 night','Recharge night. Shower, laundry, dinner. Secret Lagoon hot spring nearby. 1.5 hr drive to KEF next morning.','base',
 [gp('https://lh3.googleusercontent.com/place-photos/AL8-SNErNYGGUxPmVYxv-P0JFb9a2W8goEZyLrzYRK10SLrwov_pJxmdpcSWSXinh2dkG0lGuv7phdtqmcU1oS8tlMmV4rL_-U7xmC2-Qb02tobZONf_SkKRmLfeKV8dpwF9m9V64FIEYWaLvsMhKw=s4800-w800-h600')]),9,true);
 
 // ===== ATTRACTIONS =====
@@ -168,31 +168,31 @@ gp('https://lh3.googleusercontent.com/place-photos/AL8-SNFJTZUj4URC2-8HY9SGAUg09
 pin(64.058,-19.17,C.b4b,null,pp('F208 North — Highland Lava Drive','Day 13','Vast volcanic desert, highland lava plains. No river crossings. The Land Cruiser experience.','attraction',[]),4,false);
 
 // Kerið crater on way to Selfoss
-pin(64.041,-20.885,C.b5,null,pp('Kerið Volcanic Crater','Day 14','Vivid blue-green lake inside a 3,000-year-old volcanic crater. Quick stop on way to Selfoss.','attraction',
+pin(64.041,-20.885,C.b5,null,pp('Kerið Volcanic Crater','Day 14','Vivid blue-green lake inside a 3,000-year-old volcanic crater. Quick stop on way to Flúðir.','attraction',
 [gp('https://lh3.googleusercontent.com/place-photos/AL8-SNHqPiwD6SIXmiKdZLP2Fgvk-t28WlxO7ryd_YlwChrecD8nQ0Pgp9kXXU83GVwXP719uKLWlUpixRzx8bt5miYamQkyFK02JER4-pX_uFB7AujtLWENHb_1fdb-EVABv5QGAXphSkaWTXF7bQ=s4800-w800-h600')]),4,false);
 
 // ===== ROUTE LINES =====
-// KEF → Grundarfjörður
-L.polyline([[63.9948,-22.6239],[64.15,-22.0],[64.4,-21.8],[64.7,-22.5],[64.8,-23.0],[64.926,-23.255]],{color:C.b1,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
-// Grundarfjörður → Stykkishólmur → Ferry → Dynjandi → Ísafjörður
-L.polyline([[64.926,-23.255],[65.0724,-22.7334]],{color:C.b2,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
+// KEF → Ólafsvík
+L.polyline([[63.9948,-22.6239],[64.15,-22.0],[64.4,-21.8],[64.7,-22.5],[64.8,-23.0],[64.893,-23.720]],{color:C.b1,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
+// Ólafsvík → Stykkishólmur → Ferry → Dynjandi → Ísafjörður
+L.polyline([[64.893,-23.720],[64.926,-23.255],[65.0724,-22.7334]],{color:C.b2,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
 L.polyline([[65.0724,-22.7334],[65.52,-23.19]],{color:'#6699bb',weight:2.5,opacity:0.5,dashArray:'4,8'}).addTo(map).bindPopup('<div style="color:#88aacc;font-size:12px;font-family:DM Sans,sans-serif;">⛴ Baldur Ferry · 2.5 hr crossing</div>');
 L.polyline([[65.52,-23.19],[65.57,-23.17],[65.7326,-23.1986],[66.075,-23.1248]],{color:C.b2,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
 // Hornstrandir day trip
 L.polyline([[66.075,-23.1248],[66.3937,-22.5727]],{color:C.b2,weight:2,opacity:0.4,dashArray:'4,6'}).addTo(map).bindPopup('<div style="color:#88aacc;font-size:12px;font-family:DM Sans,sans-serif;">⛴ Hornstrandir boat day trip</div>');
 // Látrabjarg day trip
 L.polyline([[66.075,-23.1248],[65.8,-23.5],[65.5,-24.0],[65.5026,-24.5317]],{color:C.b2,weight:2,opacity:0.4,dashArray:'4,6'}).addTo(map);
-// Ísafjörður → Skagafjörður
-L.polyline([[66.075,-23.1248],[65.9,-22.5],[65.75,-21.5],[65.8,-21.0],[65.75,-20.5],[65.7424,-19.6403]],{color:C.b3,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
-// Skagafjörður → F35 start → Hveravellir → Kerlingarfjöll
-L.polyline([[65.7424,-19.6403],[65.224,-19.721]],{color:C.b4,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
+// Ísafjörður → Blönduós
+L.polyline([[66.075,-23.1248],[65.9,-22.5],[65.75,-21.5],[65.8,-21.0],[65.75,-20.5],[65.659,-20.285]],{color:C.b3,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
+// Blönduós → F35 start → Hveravellir → Kerlingarfjöll
+L.polyline([[65.659,-20.285],[65.224,-19.721]],{color:C.b4,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
 L.polyline([[65.224,-19.721],[64.8672,-19.55],[64.6834,-19.2998]],{color:C.froad,weight:3.5,opacity:0.8,dashArray:'3,5'}).addTo(map).bindPopup('<div style="color:#e05555;font-size:12px;font-weight:600;font-family:DM Sans,sans-serif;">F35 Kjölur Highland Road<br>~160 km · no river crossings</div>');
 // Kerlingarfjöll → F35 south → Route 26/32 → F208 North → Landmannalaugar
 L.polyline([[64.6834,-19.2998],[64.55,-19.35],[64.35,-19.5],[64.2,-19.45],[64.1,-19.3],[63.983,-19.067]],{color:C.froad,weight:3.5,opacity:0.8,dashArray:'3,5'}).addTo(map).bindPopup('<div style="color:#e05555;font-size:12px;font-weight:600;font-family:DM Sans,sans-serif;">F35 south + F208 North<br>Highland lava plains · no river crossings</div>');
-// Landmannalaugar → F208 North → Route 26 → Selfoss
-L.polyline([[63.983,-19.067],[64.058,-19.17],[64.15,-19.4],[64.1,-19.8],[64.0,-20.3],[63.935,-20.99]],{color:C.b5,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
-// Selfoss → KEF
-L.polyline([[63.935,-20.99],[63.95,-21.5],[63.9948,-22.6239]],{color:'#5588aa',weight:3,opacity:0.5,dashArray:'8,6'}).addTo(map);
+// Landmannalaugar → F208 North → Route 26 → Flúðir
+L.polyline([[63.983,-19.067],[64.058,-19.17],[64.15,-19.4],[64.1,-19.8],[64.0,-20.3],[64.132,-20.313]],{color:C.b5,weight:3,opacity:0.7,dashArray:'8,6'}).addTo(map);
+// Flúðir → KEF
+L.polyline([[64.132,-20.313],[64.05,-20.8],[63.95,-21.5],[63.9948,-22.6239]],{color:'#5588aa',weight:3,opacity:0.5,dashArray:'8,6'}).addTo(map);
 
 const style=document.createElement('style');
 style.textContent=`.map-label{background:rgba(10,20,40,0.88)!important;border:1px solid rgba(255,255,255,0.15)!important;border-radius:6px!important;color:#d0dae8!important;font-family:'DM Sans',sans-serif!important;font-size:11px!important;font-weight:600!important;padding:3px 8px!important;box-shadow:0 2px 8px rgba(0,0,0,0.4)!important;}.map-label::before{border-right-color:rgba(10,20,40,0.88)!important;}`;
