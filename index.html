@@ -69,7 +69,29 @@ const C={b1:'#50b478',b2:'#4a90d9',b3:'#d97b4a',b4:'#c94a4a',b4b:'#e6734a',b5:'#
 function gp(u){return u.replace('s4800-w800-h600','s800-w400-h280')}
 function photoHtml(imgs){if(!imgs||!imgs.length)return '';const c=imgs.length===1?'popup-photos single':'popup-photos';return`<div class="${c}">${imgs.slice(0,2).map(u=>`<img src="${u}" loading="lazy" alt="">`).join('')}</div>`}
 function pp(t,d,desc,type,imgs){const cls=type==='base'?'base':type==='transit'?'transit':type==='camping'?'camping':type==='glacier'?'glacier':'attraction';const lbl=type==='base'?'🏠 AIRBNB':type==='transit'?'🚗 TRANSIT':type==='camping'?'⛺ CAMPING':type==='glacier'?'🧊 GLACIER':'📍 ATTRACTION';return`${photoHtml(imgs)}<div class="popup-body"><div class="popup-day">${d}</div><div class="popup-title">${t}</div><div class="popup-desc">${desc}</div><div class="popup-type ${cls}">${lbl}</div></div>`}
-function pin(lat,lng,color,label,popup,r,hl){const m=L.circleMarker([lat,lng],{radius:r||7,fillColor:color,color:'#fff',weight:1.5,opacity:0.9,fillOpacity:0.85}).addTo(map);if(popup){m.bindPopup(popup,{maxWidth:280});m.on('mouseover',function(){this.openPopup()})}if(hl&&label){m.bindTooltip(label,{permanent:true,direction:'right',offset:[12,0],className:'map-label'})}return m}
+function pin(lat,lng,color,label,popup,r,hl){
+const baseR=r||7;
+const m=L.circleMarker([lat,lng],{radius:baseR,fillColor:color,color:'#fff',weight:1.5,opacity:0.9,fillOpacity:0.85}).addTo(map);
+// Add invisible larger hit area for easier clicking/hovering
+const hit=L.circleMarker([lat,lng],{radius:baseR+8,fillColor:color,color:'transparent',weight:0,opacity:0,fillOpacity:0}).addTo(map);
+if(popup){
+  m.bindPopup(popup,{maxWidth:280,autoPan:true,autoPanPadding:[40,40],closeOnClick:false});
+  function openIt(){map.closePopup();m.openPopup()}
+  hit.on('mouseover',openIt);
+  hit.on('click',openIt);
+  m.on('mouseover',openIt);
+  m.on('click',openIt);
+  m.on('mouseout',function(e){
+    // Keep popup open if mouse moves to the popup itself
+    setTimeout(function(){
+      const popupEl=m.getPopup()&&m.getPopup().getElement();
+      if(popupEl&&popupEl.matches(':hover'))return;
+      // Don't close if user clicked (popup stays until they click elsewhere)
+    },300);
+  });
+}
+if(hl&&label){m.bindTooltip(label,{permanent:true,direction:'right',offset:[12,0],className:'map-label'})}
+return m}
 
 // ===== BASES =====
 pin(63.9948,-22.6239,'#aabbcc',null,pp('Keflavík Airport','Day 1 & Day 15','Arrive Sun Jun 28 6:20am. Depart Sun Jul 12 8:00pm.','transit',['https://lh3.googleusercontent.com/places/ANXAkqEcccwhFcHRUejayyCL-uuErWwLx9aon3wygLVun4N7R48U5frzr55aV-5GOFGo7ENTbHzynAiDxSbeF1YG3iZROUMY8p2Upcc=s800-w400-h280']),6,false);
